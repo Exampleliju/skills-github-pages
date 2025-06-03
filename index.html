@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>四邊形賓果</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #000000;
+    }
+    .slot-container {
+      width: 800px;
+      height: 10em;
+      overflow: hidden;
+      border: 4px solid #4a90e2;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 4px 24px #0001;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 60px;
+      position: relative;
+    }
+    .slot-list {
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.1s cubic-bezier(.4,2,.6,1);
+    }
+    .slot-item {
+      font-size: 4rem;
+      color: #333;
+      height: 4em;
+      display: center;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+    }
+    .slot-highlight {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 4px solid #ffb300;
+      border-radius: 16px;
+      pointer-events: none;
+      box-sizing: border-box;
+      z-index: 2;
+      box-shadow: 0 0 16px #ffb30088;
+    }
+    button {
+      font-size: 2.5rem;
+      padding: 1em 2em;
+      border: none;
+      border-radius: 8px;
+      background: #4a90e2;
+	font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    button:hover:enabled {
+      background: #357ab8;
+    }
+  </style>
+</head>
+<body>
+  <div class="slot-container">
+    <div class="slot-list" id="slotList">
+      <!-- 動態產生 slot-item -->
+    </div>
+    <div class="slot-highlight"></div>
+  </div>
+  <button id="drawBtn" onclick="draw()">GO!</button>
+  <script>
+    const items = [
+      "兩組對邊平行",
+      "兩組對邊等長",
+      "兩組對角相等",
+      "四邊等長",
+      "四角都是直角",
+      "兩組鄰邊等長",
+      "只有一組對邊平行",
+      "對角線互相平分",
+      "對角線互相垂直",
+      "對角線等長"
+    ];
+
+    const slotList = document.getElementById('slotList');
+    const btn = document.getElementById('drawBtn');
+    const slotHeight = 4; // em
+    let rolling = false;
+    let rollInterval = null;
+    let currentIndex = 0;
+
+    // 初始化 slot
+    function renderSlot(centerIdx) {
+      // 產生一個長度為 items.length+2 的陣列，頭尾各加一個，方便滾動
+      let arr = [];
+      arr.push(items[(centerIdx - 1 + items.length) % items.length]);
+      for (let i = 0; i < items.length; i++) {
+        arr.push(items[(centerIdx + i) % items.length]);
+      }
+      arr.push(items[(centerIdx + items.length) % items.length]);
+      slotList.innerHTML = arr.map(item => `<div class="slot-item">${item}</div>`).join('');
+      // 初始位置
+      slotList.style.transform = `translateY(-${slotHeight}em)`;
+    }
+
+    renderSlot(0);
+
+    function draw() {
+      if (rolling) return;
+      rolling = true;
+      btn.disabled = true;
+
+      let totalTime = 2000; // 2秒
+      let start = Date.now();
+      let position = 1; // slot-list 的 index
+      let cycles = 0;
+      let maxCycles = Math.floor(totalTime / 80);
+      let finalIdx = Math.floor(Math.random() * items.length);
+
+      function rollStep() {
+        if (cycles < maxCycles) {
+          position = (position + 1) % items.length;
+          slotList.style.transition = 'transform 0.2s cubic-bezier(.4,2,.6,1)';
+          slotList.style.transform = `translateY(-${slotHeight * position}em)`;
+          cycles++;
+          setTimeout(rollStep, 80);
+        } else {
+          // 最終停在 finalIdx
+          renderSlot(finalIdx);
+          slotList.style.transition = 'none';
+          slotList.style.transform = `translateY(-${slotHeight}em)`;
+          setTimeout(() => {
+            rolling = false;
+            btn.disabled = false;
+            currentIndex = finalIdx;
+          }, 500);
+        }
+      }
+      rollStep();
+    }
+  </script>
+</body>
+</html>
